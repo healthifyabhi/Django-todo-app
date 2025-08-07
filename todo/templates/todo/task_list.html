@@ -16,8 +16,14 @@
 
     <hr>
 
+    <p>Filter:
+    <a href="{% url 'task_list' %}">All</a> |
+    <a href="?status=completed">Completed</a> |
+    <a href="?status=incomplete">Incomplete</a>
+    </p>
+
     <ul>
-        {% for task in tasks %}
+        {% for task in page_obj %}
             <li>
                 {{ task.title }} {% if task.completed %}(Done){% endif %}
                 <a href="{% url 'edit_task' task.id %}">Edit</a>
@@ -27,5 +33,18 @@
             <li>No tasks yet!</li>
         {% endfor %}
     </ul>
+    <div>
+    {% if page_obj.has_previous %}
+        <a href="?page=1{% if status %}&status={{ status }}{% endif %}">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if status %}&status={{ status }}{% endif %}">Previous</a>
+    {% endif %}
+
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if status %}&status={{ status }}{% endif %}">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if status %}&status={{ status }}{% endif %}">Last</a>
+    {% endif %}
+    </div>
 </body>
 </html>
