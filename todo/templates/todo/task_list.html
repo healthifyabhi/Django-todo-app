@@ -1,0 +1,31 @@
+<!-- mysite/todo/templates/todo/task_list.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todo List</title>
+</head>
+<body>
+    <h1>Todo</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% if editing %}Update Task{% else %}Add Task{% endif %}</button>
+    </form>
+
+    <hr>
+
+    <ul>
+        {% for task in tasks %}
+            <li>
+                {{ task.title }} {% if task.completed %}(Done){% endif %}
+                <a href="{% url 'edit_task' task.id %}">Edit</a>
+                <a href="{% url 'delete_task' task.id %}">Delete</a>
+            </li>
+        {% empty %}
+            <li>No tasks yet!</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
