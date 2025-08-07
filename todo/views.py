@@ -4,6 +4,8 @@ from .forms import TaskForm
 from django.core.paginator import Paginator 
 from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect
+from django.contrib.auth import login
+from .forms import RegisterForm
 # Create the views here
 
 def task_list(request):
@@ -62,3 +64,18 @@ class CustomLoginView(LoginView):
         if request.user.is_authenticated:
             return redirect('task_list')
         return super().get(request, *args, **kwargs)
+    
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('task_list')
+
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # auto login after successful registration
+            return redirect('task_list')
+    else:
+        form = RegisterForm()
+    
+    return render(request, 'todo/register.html', {'form': form})
