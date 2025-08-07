@@ -5,7 +5,10 @@ from django.core.paginator import Paginator
 # Create the views here
 
 def task_list(request):
-    tasks = Task.objects.all()
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+    tasks = Task.objects.filter(user=request.user)
 
     status = request.GET.get('status')
     if status == 'completed':
@@ -22,7 +25,9 @@ def task_list(request):
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
-            form.save()
+            task = form.save (commit= False)
+            task.user = request.user
+            task.save()
             return redirect('/todo')
     
     return render(request, 'todo/task_list.html', {
@@ -33,13 +38,13 @@ def task_list(request):
         })
 
 def delete_task(request, id):
-    task = get_object_or_404(Task, id= id)
+    task = get_object_or_404(Task, id= id, user = request.user)
     task.delete()
     return redirect('/todo')
 
 def edit_task(request, id):
-    task = get_object_or_404(Task, id=id)
-    tasks = Task.objects.all()
+    task = get_object_or_404(Task, id=id, user = request.user)
+    tasks = Task.objects.filter(user= request.user)
 
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task)
