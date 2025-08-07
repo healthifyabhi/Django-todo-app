@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect , get_object_or_404
 from .models import Task
 from .forms import TaskForm
 from django.core.paginator import Paginator 
+from django.contrib.auth.views import LoginView
+from django.shortcuts import redirect
 # Create the views here
 
 def task_list(request):
@@ -54,3 +56,9 @@ def edit_task(request, id):
     else:
         form = TaskForm(instance=task)
     return render(request, 'todo/task_list.html', {'form': form, 'tasks':tasks, 'editing': True})
+
+class CustomLoginView(LoginView):
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('task_list')
+        return super().get(request, *args, **kwargs)
