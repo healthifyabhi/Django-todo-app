@@ -1,57 +1,140 @@
-<!-- mysite/todo/templates/todo/task_list.html -->
-
 <!DOCTYPE html>
 <html>
 <head>
     <title>Todo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+        }
+        header a {
+            color: white;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        li a {
+            margin-left: 10px;
+            font-size: 0.9em;
+            color: #4CAF50;
+        }
+        li a:hover {
+            text-decoration: underline;
+        }
+        .filters a {
+            margin-right: 8px;
+            text-decoration: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .filters a.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .pagination {
+            margin-top: 10px;
+        }
+        .pagination a {
+            margin: 0 3px;
+            text-decoration: none;
+            padding: 4px 8px;
+            background: #eee;
+            border-radius: 4px;
+        }
+        .pagination span {
+            margin: 0 3px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Todo</h1>
+    <header>
+        <h2>Todo App</h2>
+        {% if user.is_authenticated %}
+            Logged in as {{ user.username }} | <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+        {% endif %}
+    </header>
 
-    {% if user.is_authenticated %}
-    <p>Logged in as {{ user.username }} | <a href="{% url 'logout' %}">Logout</a></p>
-    {% else %}
-    <a href="{% url 'login' %}">Login</a>
-    {% endif %}
+    <div class="container">
+        <h3>{% if editing %}Edit Task{% else %}Add Task{% endif %}</h3>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">{% if editing %}Update Task{% else %}Add Task{% endif %}</button>
+        </form>
 
+        <div class="filters">
+            <strong>Filter:</strong>
+            <a href="{% url 'task_list' %}" class="{% if not status %}active{% endif %}">All</a>
+            <a href="?status=completed" class="{% if status == 'completed' %}active{% endif %}">Completed</a>
+            <a href="?status=incomplete" class="{% if status == 'incomplete' %}active{% endif %}">Incomplete</a>
+        </div>
 
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">{% if editing %}Update Task{% else %}Add Task{% endif %}</button>
-    </form>
+        <ul>
+            {% for task in page_obj %}
+                <li>
+                    {{ task.title }} {% if task.completed %}✅{% endif %}
+                    <a href="{% url 'edit_task' task.id %}">Edit</a>
+                    <a href="{% url 'delete_task' task.id %}">Delete</a>
+                </li>
+            {% empty %}
+                <li>No tasks yet!</li>
+            {% endfor %}
+        </ul>
 
-    <hr>
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if status %}&status={{ status }}{% endif %}">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if status %}&status={{ status }}{% endif %}">Previous</a>
+            {% endif %}
 
-    <p>Filter:
-    <a href="{% url 'task_list' %}">All</a> |
-    <a href="?status=completed">Completed</a> |
-    <a href="?status=incomplete">Incomplete</a>
-    </p>
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
 
-    <ul>
-        {% for task in page_obj %}
-            <li>
-                {{ task.title }} {% if task.completed %}(Done){% endif %}
-                <a href="{% url 'edit_task' task.id %}">Edit</a>
-                <a href="{% url 'delete_task' task.id %}">Delete</a>
-            </li>
-        {% empty %}
-            <li>No tasks yet!</li>
-        {% endfor %}
-    </ul>
-    <div>
-    {% if page_obj.has_previous %}
-        <a href="?page=1{% if status %}&status={{ status }}{% endif %}">First</a>
-        <a href="?page={{ page_obj.previous_page_number }}{% if status %}&status={{ status }}{% endif %}">Previous</a>
-    {% endif %}
-
-    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-
-    {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}{% if status %}&status={{ status }}{% endif %}">Next</a>
-        <a href="?page={{ page_obj.paginator.num_pages }}{% if status %}&status={{ status }}{% endif %}">Last</a>
-    {% endif %}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if status %}&status={{ status }}{% endif %}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if status %}&status={{ status }}{% endif %}">Last</a>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>
