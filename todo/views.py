@@ -6,6 +6,7 @@ from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect
 from django.contrib.auth import login
 from .forms import RegisterForm
+from django.contrib.auth.forms import AuthenticationForm
 # Create the views here
 
 def task_list(request):
@@ -59,11 +60,20 @@ def edit_task(request, id):
         form = TaskForm(instance=task)
     return render(request, 'todo/task_list.html', {'form': form, 'tasks':tasks, 'editing': True})
 
-class CustomLoginView(LoginView):
-    def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('task_list')
+
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
             return redirect('task_list')
-        return super().get(request, *args, **kwargs)
+    else:
+        form = AuthenticationForm()
+    
+    return render(request, 'todo/login.html', {'form': form})
     
 def register_view(request):
     if request.user.is_authenticated:
